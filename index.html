@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
     <!-- Login Screen -->
@@ -262,9 +263,12 @@
                                 <h1>Rekap Bulanan</h1>
                                 <p>Ringkasan kehadiran siswa dalam satu bulan.</p>
                             </div>
-                            <div class="filter-actions">
+                             <div class="filter-actions">
                                 <input type="month" id="rekap-month-picker">
                                 <button class="btn-primary" id="btn-fetch-rekap">Tampilkan</button>
+                                <button class="btn-refresh" id="btn-export-pdf" style="background: #dc2626; color: white;">
+                                    <i class="fas fa-file-pdf"></i> Export PDF
+                                </button>
                             </div>
                         </div>
                     </div>
