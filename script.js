@@ -842,7 +842,8 @@ function setupModals() {
         if (event.target == modal) closeModal();
     };
 
-    // Logout Button
+    // Footer Buttons
+    document.getElementById('btn-refresh-page').addEventListener('click', () => location.reload());
     document.getElementById('btn-logout').addEventListener('click', handleLogout);
 
     // Login Form
