@@ -363,20 +363,40 @@ body {
 
 .selected-tags-area {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap; /* Force single line for scrolling */
     gap: 0.5rem;
+    overflow-x: auto;
+    padding: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    min-height: 45px;
+    margin-bottom: 10px;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    scrollbar-width: thin;
+}
+
+.selected-tags-area::-webkit-scrollbar {
+    height: 4px;
+}
+
+.selected-tags-area::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
 }
 
 .dudi-tag {
+    flex-shrink: 0; /* Prevent tags from squeezing/shrinking */
     background: var(--primary-color);
     color: white;
-    padding: 0.25rem 0.75rem;
+    padding: 0.4rem 0.8rem;
     border-radius: 2rem;
     font-size: 0.75rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
     animation: fadeIn 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .dudi-tag i {
