@@ -29,6 +29,7 @@ body {
     background-color: var(--bg-color);
     color: var(--text-main);
     overflow-x: hidden;
+    overscroll-behavior-y: contain; /* Disable pull-to-refresh */
 }
 
 /* Login Screen Styles */
