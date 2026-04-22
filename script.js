@@ -48,6 +48,7 @@ function initApplication() {
     if (document.getElementById('btn-share-absent')) document.getElementById('btn-share-absent').addEventListener('click', shareAbsentToWA);
     if (document.getElementById('btn-fetch-harian')) document.getElementById('btn-fetch-harian').addEventListener('click', fetchHarianData);
     if (document.getElementById('btn-fetch-rekap')) document.getElementById('btn-fetch-rekap').addEventListener('click', fetchRekapData);
+    if (document.getElementById('btn-export-pdf')) document.getElementById('btn-export-pdf').addEventListener('click', exportRekapToPDF);
 
     // Dashboard Filters
     document.getElementById('dashboard-date-filter').addEventListener('change', fetchInitialData);
@@ -931,4 +932,42 @@ function shareAbsentToWA() {
 
     const waUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(waUrl, '_blank');
+}
+
+function exportRekapToPDF() {
+    const element = document.getElementById('rekap-table');
+    const month = document.getElementById('rekap-month-picker').value;
+    
+    if (!month) {
+        alert('Pilih bulan terlebih dahulu.');
+        return;
+    }
+
+    const options = {
+        margin: 10,
+        filename: `Rekap_Presensi_PKL_${month}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    };
+
+    // Add title before export
+    const container = document.createElement('div');
+    container.innerHTML = `
+        <div style="text-align: center; margin-bottom: 20px; font-family: 'Inter', sans-serif;">
+            <h2 style="margin: 0;">LAPORAN REKAPITULASI PRESENSI SISWA PKL</h2>
+            <h3 style="margin: 5px 0;">Bulan: ${month}</h3>
+            <hr style="border: 1px solid #000; margin: 10px 0;">
+        </div>
+    `;
+    
+    // Clone table to avoid affecting live view
+    const tableClone = element.cloneNode(true);
+    // Remove inline styles that might mess up PDF layout
+    tableClone.style.width = '100%';
+    tableClone.style.fontSize = '10px';
+    
+    container.appendChild(tableClone);
+
+    html2pdf().set(options).from(container).save();
 }
