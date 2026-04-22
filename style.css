@@ -740,15 +740,17 @@ tr:hover td {
 /* --- Mobile Responsive Improvements --- */
 @media (max-width: 768px) {
     .app-container {
-        display: block !important;
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100vh !important;
+        overflow: hidden !important;
     }
 
     .sidebar {
         position: relative !important;
         width: 100% !important;
         height: auto !important;
-        left: 0 !important;
-        top: 0 !important;
+        flex-shrink: 0 !important; /* Don't let header shrink */
         z-index: 1001;
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         border-bottom: 2px solid var(--primary-color);
@@ -800,15 +802,19 @@ tr:hover td {
     .main-content {
         margin-left: 0 !important;
         width: 100%;
-        padding-top: 0 !important; /* No longer needs offset for top-bar if sidebar is above it */
+        flex: 1 !important; /* Take remaining space */
+        overflow-y: auto !important; /* Enable scrolling for content only */
+        display: flex;
+        flex-direction: column;
     }
 
     .top-bar {
         padding: 0 1rem;
         width: 100% !important;
-        left: 0 !important;
-        position: sticky !important;
-        top: 0;
+        flex-shrink: 0 !important; /* Keep search bar visible */
+        position: relative !important;
+        top: auto !important;
+        background: white;
     }
 
     .search-bar {
