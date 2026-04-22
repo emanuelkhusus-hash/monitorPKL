@@ -164,9 +164,40 @@ body {
 .sidebar-footer {
     padding: 1.5rem;
     border-top: 1px solid var(--sidebar-active);
-    font-size: 0.75rem;
-    text-align: center;
-    color: #64748b;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sidebar-footer-btn {
+    width: 100%;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-weight: 500;
+    transition: all 0.2s;
+    color: white;
+}
+
+.sidebar-footer-btn.refresh {
+    background: var(--primary-color);
+}
+
+.sidebar-footer-btn.refresh:hover {
+    background: var(--primary-hover);
+}
+
+.sidebar-footer-btn.logout {
+    background: #334155;
+}
+
+.sidebar-footer-btn.logout:hover {
+    background: #1e293b;
 }
 
 /* Main Content */
