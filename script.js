@@ -1,4 +1,4 @@
-const API_URL = 'https://script.google.com/macros/s/AKfycbyJnZhRAr9TUUZuWYbrbnNPoEIz_dzj1HJ4wGquO_eewotgCgY3G5QO8Lys0KEUZPSR/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwMMlDtThv9Uo06NIbaxwi5AtA394HSOtf6wr3bjotj4Ociqh4rpGind8TYISRvU3pD/exec';
 
 // --- PENGATURAN LOGIN ---
 const AUTH_CONFIG = {
