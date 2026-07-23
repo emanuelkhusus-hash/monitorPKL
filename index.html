@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor PKL - Rekap Kehadiran</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-view" class="login-screen">
+        <div class="login-card">
+            <img src="logo.png" alt="Logo Kenshiro" class="login-logo">
+            <h2>PKL KENSHIRO</h2>
+            <p>Sistem Monitoring Kehadiran</p>
+            <form id="login-form">
+                <div class="input-group">
+                    <label>Username</label>
+                    <input type="text" id="username" placeholder="Masukkan username" required>
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="password" placeholder="Masukkan password" required>
+                </div>
+                <button type="submit" class="btn-login">Masuk ke Sistem</button>
+                <p id="login-error" class="error-msg" style="display: none;">Username atau password salah!</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Overlay for mobile sidebar -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="logo.png" alt="Logo PKL Kenshiro" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--primary-color); margin-bottom: 15px; background: white;">
+                <h2>PKL KENSHIRO</h2>
+                <p>Monitoring System 2026</p>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-view="dashboard">
+                    <i class="fas fa-th-large"></i> Dashboard
+                </a>
+                <a href="#" class="nav-item" data-view="harian">
+                    <i class="fas fa-calendar-day"></i> Presensi Harian
+                </a>
+                <a href="#" class="nav-item" data-view="datasiswa">
+                    <i class="fas fa-users"></i> Data Siswa
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="btn-refresh-page" class="sidebar-footer-btn refresh">
+                    <i class="fas fa-sync-alt"></i> Muat Ulang (Refresh)
+                </button>
+                <button id="btn-logout" class="sidebar-footer-btn logout">
+                    <i class="fas fa-sign-out-alt"></i> Keluar (Logout)
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar" style="position: sticky; top: 0; z-index: 20000; background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 2rem; width: 100%; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                <button id="mobile-menu-toggle" style="display: none; background: none; border: none; font-size: 1.5rem; color: var(--primary-color); cursor: pointer; margin-right: 15px;">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="search-bar" style="position: relative; flex: 1; max-width: 400px; margin-right: 20px;">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="global-search" placeholder="Cari nama siswa atau DUDI..." autocomplete="off">
+                    <div id="global-search-results" class="search-results-list" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; z-index: 9999; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 8px; margin-top: 5px; max-height: 300px; overflow-y: auto;">
+                        <!-- Results -->
+                    </div>
+                </div>
+                <div class="user-profile" style="display: flex; align-items: center; gap: 20px; white-space: nowrap;">
+                    <div class="network-stats-container" style="display: flex; gap: 15px; font-family: monospace; font-size: 0.85rem;">
+                        <span class="stat-item" id="net-latency" style="color: #6366f1;"><i class="fas fa-bolt"></i> -- ms</span>
+                        <span class="stat-item" id="net-size" style="color: #10b981;"><i class="fas fa-download"></i> -- KB</span>
+                    </div>
+                    <div class="date-now" id="current-date-display" style="font-weight: 500; color: #64748b;">Rabu, 22 April 2026</div>
+                    <div class="status-indicator online" id="connection-speed"><i class="fas fa-tachometer-alt"></i> 0.0 KB/s</div>
+                </div>
+            </header>
+
+            <!-- Views Container -->
+            <div id="view-container">
+                <!-- Dashboard View -->
+                <section id="dashboard-view" class="view">
+                    <div class="header-section">
+                        <div class="header-with-actions">
+                            <div>
+                                <h1>Dashboard Ringkasan</h1>
+                                <p>Pantau kehadiran siswa PKL secara real-time.</p>
+                            </div>
+                            <div class="filter-actions dashboard-filters">
+                                <div class="filter-group dudi-tagging-container">
+                                    <label>Lokasi DUDI (Pilih satu atau lebih):</label>
+                                    <div class="tag-input-wrapper">
+                                        <div id="selected-tags" class="selected-tags-area">
+                                            <!-- Selected tags will appear here -->
+                                        </div>
+                                        <div class="search-input-group" style="position: relative;">
+                                            <i class="fas fa-search"></i>
+                                            <input type="text" id="dudi-live-search" 
+                                                   placeholder="Ketik nama DUDI..." 
+                                                   autocomplete="off"
+                                                   oninput="handleDudiLiveSearch(this.value)">
+                                            <div id="dudi-search-results" class="search-results-list" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; z-index: 9999; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 8px; margin-top: 5px; max-height: 250px; overflow-y: auto;">
+                                                <!-- Hasil akan muncul di sini -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="tag-actions" style="margin-top: 10px; display: flex; gap: 10px;">
+                                        <button class="btn-refresh" id="btn-save-dudi" style="background: var(--primary-color); color: white; padding: 0.5rem 1rem;">
+                                            <i class="fas fa-save"></i> Set Lokasi (Simpan)
+                                        </button>
+                                        <button class="btn-refresh" id="btn-clear-dudi" style="background: #ef4444; color: white; padding: 0.5rem 1rem;">
+                                            <i class="fas fa-trash-alt"></i> Hapus Semua
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="filter-group">
+                                    <label>Tanggal:</label>
+                                    <input type="date" id="dashboard-date-filter">
+                                </div>
+                                <div class="filter-group" style="margin-left: 10px;">
+                                    <label>Cetak Rekap Bulanan:</label>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <input type="month" id="rekap-month-picker">
+                                        <button class="btn-refresh" id="btn-export-pdf" style="background: var(--danger); color: white; padding: 0.5rem 1rem;">
+                                            <i class="fas fa-file-pdf"></i> Export
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card total">
+                            <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+                            <div class="stat-info">
+                                <span class="label">Total Siswa</span>
+                                <h2 id="stat-total-siswa">0</h2>
+                            </div>
+                        </div>
+                        <div class="stat-card hadir">
+                            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                            <div class="stat-info">
+                                <span class="label">Total Hadir</span>
+                                <h2 id="stat-hadir">0</h2>
+                            </div>
+                        </div>
+                        <div class="stat-card izin">
+                            <div class="stat-icon"><i class="fas fa-info-circle"></i></div>
+                            <div class="stat-info">
+                                <span class="label">Izin/Sakit</span>
+                                <h2 id="stat-izin">0</h2>
+                            </div>
+                        </div>
+                        <div class="stat-card absen">
+                            <div class="stat-icon"><i class="fas fa-times-circle"></i></div>
+                            <div class="stat-info">
+                                <span class="label">Belum Presensi</span>
+                                <h2 id="stat-alfa">0</h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Main Card -->
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3>Presensi Terbaru</h3>
+                            <button class="btn-refresh" id="btn-refresh-dashboard"><i class="fas fa-sync-alt"></i> Refresh</button>
+                        </div>
+                        <div class="table-container" style="max-height: 450px; overflow-y: auto;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 60px; text-align: center;">Foto</th>
+                                        <th>Siswa</th>
+                                        <th>Waktu</th>
+                                        <th>DUDI</th>
+                                        <th>Status</th>
+                                        <th>Keterangan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboard-attendance-list">
+                                    <tr><td colspan="6" style="text-align:center; padding: 2rem; color: var(--text-muted)">Silakan pilih lokasi DUDI untuk melihat data presensi.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Absent Students Section -->
+                    <div class="content-card" style="margin-top: 2rem; border: 1px solid var(--danger);">
+                        <div class="card-header" style="background: #fef2f2; display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="color: #991b1b;"><i class="fas fa-user-times"></i> Siswa Belum Presensi</h3>
+                            <button class="btn-refresh" id="btn-share-absent" style="background: #25d366; color: white;">
+                                <i class="fab fa-whatsapp"></i> Share Rekap
+                            </button>
+                        </div>
+                        <div style="padding: 10px;">
+                            <span id="absent-count-badge" class="status-badge" style="background: var(--danger); color: white; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.7rem;">0 Siswa</span>
+                        </div>
+                        <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Nama Siswa</th>
+                                        <th>Lokasi DUDI</th>
+                                        <th style="text-align:center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="absent-students-list">
+                                    <tr><td colspan="3" style="text-align:center; padding: 2rem; color: var(--text-muted)">Pilih lokasi DUDI untuk melihat daftar.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    </div>
+                </section>
+
+                <!-- Harian View -->
+                <section id="harian-view" class="view hidden">
+                    <div class="header-section">
+                        <div class="header-with-actions">
+                            <div>
+                                <h1>Presensi Harian</h1>
+                                <p>Lihat detail kehadiran berdasarkan tanggal.</p>
+                            </div>
+                            <div class="filter-actions">
+                                <input type="date" id="harian-date-picker">
+                                <button class="btn-primary" id="btn-fetch-harian">Tampilkan</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="content-card">
+                        <div class="table-responsive">
+                            <table id="harian-table">
+                                <thead>
+                                    <tr>
+                                        <th>FOTO</th>
+                                        <th>NAMA SISWA</th>
+                                        <th>DUDI</th>
+                                        <th>WAKTU</th>
+                                        <th>STATUS</th>
+                                        <th>ALASAN</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="harian-list">
+                                    <!-- Data will be injected here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Data Siswa View -->
+                <section id="datasiswa-view" class="view hidden">
+                    <div class="header-section">
+                        <h1>Data Master Siswa</h1>
+                        <p>Daftar seluruh siswa PKL yang terdaftar.</p>
+                    </div>
+                    <div class="content-card">
+                        <div class="table-responsive">
+                            <table id="master-table">
+                                <thead>
+                                    <tr>
+                                        <th>NAMA SISWA</th>
+                                        <th>DUDI (TEMPAT PKL)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="master-list">
+                                    <!-- Data will be injected here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for Photo Preview -->
+    <div id="photo-modal" class="modal">
+        <span class="close-modal">&times;</span>
+        <div class="modal-content">
+            <img id="modal-img" src="" alt="Bukti Presensi">
+            <div id="modal-caption"></div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="overlay hidden">
+        <div class="loading-percentage" id="loading-pct">0%</div>
+        <p id="loading-text">Sinkronisasi data...</p>
+    </div>
+
+    <script>
+        window.onerror = function(msg, url, line, col, error) {
+            alert("Terjadi kesalahan di sistem:\\n" + msg + "\\nBaris: " + line);
+        };
+    </script>
+    <script src="script.js?v=3"></script>
+</body>
+</html>
