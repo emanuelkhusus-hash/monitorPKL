@@ -46,6 +46,7 @@ function initApplication() {
     if (document.getElementById('btn-refresh-dashboard')) document.getElementById('btn-refresh-dashboard').addEventListener('click', refreshAll);
     if (document.getElementById('btn-share-absent')) document.getElementById('btn-share-absent').addEventListener('click', shareAbsentToWA);
     if (document.getElementById('btn-fetch-harian')) document.getElementById('btn-fetch-harian').addEventListener('click', fetchHarianData);
+    if (document.getElementById('btn-export-pdf')) document.getElementById('btn-export-pdf').addEventListener('click', exportRekapToPDF);
 
     // Dashboard Filters
     document.getElementById('dashboard-date-filter').addEventListener('change', fetchInitialData);
@@ -692,6 +693,9 @@ function setupDatePickers() {
     
     document.getElementById('dashboard-date-filter').value = today;
     document.getElementById('harian-date-picker').value = today;
+    if (document.getElementById('rekap-month-picker')) {
+        document.getElementById('rekap-month-picker').value = currentMonth;
+    }
     document.getElementById('current-date-display').textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     
     // Add listener for harian date picker
