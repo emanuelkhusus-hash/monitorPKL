@@ -819,4 +819,125 @@ function shareAbsentToWA() {
     window.open(waUrl, '_blank');
 }
 
+async function exportRekapToPDF() {
+    const month = document.getElementById('rekap-month-picker').value;
+    if (!month) {
+        alert('Pilih bulan terlebih dahulu.');
+        return;
+    }
+    
+    if (state.selectedDudis.length === 0) {
+        alert('Silakan Set Lokasi DUDI terlebih dahulu untuk memfilter data yang akan di-export.');
+        return;
+    }
+
+    showLoading(true);
+    try {
+        const res = await fetchWithStats(`${API_URL}?action=rekap&bulan=${month}`);
+        const data = await res.json();
+        const attendanceList = data.attendance || [];
+        
+        // Group by DUDI
+        const dudiGroups = {};
+        state.masterData.forEach(s => {
+            const dudiName = s.dudi || s.DUDI || 'Lainnya';
+            if (!state.selectedDudis.includes(dudiName)) return;
+
+            if (!dudiGroups[dudiName]) dudiGroups[dudiName] = [];
+            dudiGroups[dudiName].push({ nama: s.nama, hadir: 0, izin: 0, sakit: 0 });
+        });
+
+        // Count attendance
+        attendanceList.forEach(r => {
+            const studentName = (r.nama || r.Nama || '').trim().toLowerCase();
+            const status = (r.status || r['status kehadiran'] || '').toLowerCase();
+            
+            for (const dudi in dudiGroups) {
+                const student = dudiGroups[dudi].find(s => s.nama.toLowerCase().trim() === studentName);
+                if (student) {
+                    if (status.includes('hadir')) student.hadir++;
+                    else if (status.includes('izin')) student.izin++;
+                    else if (status.includes('sakit')) student.sakit++;
+                    break;
+                }
+            }
+        });
+
+        // Generate HTML Table for PDF
+        const container = document.createElement('div');
+        container.style.padding = '20px';
+        container.style.fontFamily = 'sans-serif';
+        container.innerHTML = `
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h2 style="margin: 0; color: #0f172a;">REKAPITULASI PRESENSI BULANAN</h2>
+                <h3 style="margin: 5px 0; color: #475569;">Bulan: ${month}</h3>
+                <hr style="border: 1px solid #cbd5e1; margin: 15px 0;">
+            </div>
+        `;
+        
+        const table = document.createElement('table');
+        table.style.width = '100%';
+        table.style.borderCollapse = 'collapse';
+        table.style.fontSize = '12px';
+        
+        table.innerHTML = `
+            <thead>
+                <tr style="background-color: #f1f5f9;">
+                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: left;">DUDI / NAMA SISWA</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; width: 60px;">HADIR</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; width: 60px;">IZIN/SAKIT</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        `;
+        
+        const tbody = table.querySelector('tbody');
+        const sortedDudis = Object.keys(dudiGroups).sort();
+        
+        if (sortedDudis.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 20px;">Tidak ada data siswa untuk lokasi terpilih.</td></tr>';
+        } else {
+            sortedDudis.forEach(dudi => {
+                const headerTr = document.createElement('tr');
+                headerTr.innerHTML = `
+                    <td colspan="3" style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold; background-color: #f8fafc; color: #0ea5e9;">
+                        📍 ${dudi}
+                    </td>
+                `;
+                tbody.appendChild(headerTr);
+                
+                const students = dudiGroups[dudi].sort((a,b) => a.nama.localeCompare(b.nama));
+                students.forEach(s => {
+                    const tr = document.createElement('tr');
+                    const totalIzinSakit = s.izin + s.sakit;
+                    tr.innerHTML = `
+                        <td style="border: 1px solid #cbd5e1; padding: 8px; padding-left: 20px;">${s.nama}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">${s.hadir}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">${totalIzinSakit}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            });
+        }
+        
+        container.appendChild(table);
+
+        const options = {
+            margin: 15,
+            filename: \`Rekap_Presensi_\${month}.pdf\`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().set(options).from(container).save();
+
+    } catch (error) {
+        console.error('Export Error:', error);
+        alert('Gagal mengambil data untuk export: ' + error.message);
+    } finally {
+        showLoading(false);
+    }
+}
+
 
