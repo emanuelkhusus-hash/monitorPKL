@@ -22,7 +22,6 @@ const loadingOverlay = document.getElementById('loading-overlay');
 const dashboardAttendanceList = document.getElementById('dashboard-attendance-list');
 const harianList = document.getElementById('harian-list');
 const masterList = document.getElementById('master-list');
-const rekapList = document.getElementById('rekap-list');
 const globalSearch = document.getElementById('global-search');
 
 // Initialization
@@ -47,8 +46,6 @@ function initApplication() {
     if (document.getElementById('btn-refresh-dashboard')) document.getElementById('btn-refresh-dashboard').addEventListener('click', refreshAll);
     if (document.getElementById('btn-share-absent')) document.getElementById('btn-share-absent').addEventListener('click', shareAbsentToWA);
     if (document.getElementById('btn-fetch-harian')) document.getElementById('btn-fetch-harian').addEventListener('click', fetchHarianData);
-    if (document.getElementById('btn-fetch-rekap')) document.getElementById('btn-fetch-rekap').addEventListener('click', fetchRekapData);
-    if (document.getElementById('btn-export-pdf')) document.getElementById('btn-export-pdf').addEventListener('click', exportRekapToPDF);
 
     // Dashboard Filters
     document.getElementById('dashboard-date-filter').addEventListener('change', fetchInitialData);
@@ -371,27 +368,6 @@ async function fetchHarianData() {
     }
 }
 
-async function fetchRekapData() {
-    const month = document.getElementById('rekap-month-picker').value;
-    if (!month) {
-        alert('Silakan pilih bulan terlebih dahulu.');
-        return;
-    }
-    
-    showLoading(true);
-    try {
-        const res = await fetchWithStats(`${API_URL}?action=rekap&bulan=${month}`);
-        const data = await res.json();
-        const attendance = data.attendance || [];
-        renderRekapTable(attendance);
-        showLoading(false);
-    } catch (error) {
-        console.error('Rekap Fetch Error:', error);
-        alert('Gagal mengambil data rekap: ' + error.message);
-        showLoading(false);
-    }
-}
-
 // Master list render
 async function fetchMasterData() {
     showLoading(true);
@@ -434,22 +410,6 @@ async function fetchHarianData() {
         renderHarianTable(data.attendance || []);
     } catch (error) {
         alert('Gagal memuat data harian.');
-    } finally {
-        showLoading(false);
-    }
-}
-
-async function fetchRekapData() {
-    const bulan = document.getElementById('rekap-month-picker').value; // YYYY-MM
-    if (!bulan) return alert('Pilih bulan terlebih dahulu.');
-    
-    showLoading(true);
-    try {
-        const res = await fetchWithStats(`${API_URL}?action=rekap&bulan=${bulan}`);
-        const data = await res.json();
-        renderRekapTable(data.attendance || []);
-    } catch (error) {
-        alert('Gagal memuat rekap bulanan.');
     } finally {
         showLoading(false);
     }
@@ -544,7 +504,7 @@ function renderDashboardTable() {
     list.innerHTML = '';
     
     if (state.selectedDudis.length === 0) {
-        list.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 2rem; color: var(--text-muted)">Silakan pilih lokasi DUDI untuk melihat data presensi.</td></tr>';
+        list.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 2rem; color: var(--text-muted)">Silakan pilih lokasi DUDI untuk melihat data presensi.</td></tr>';
         return;
     }
 
@@ -559,7 +519,7 @@ function renderDashboardTable() {
     });
     
     if (filteredData.length === 0) {
-        list.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 2rem;">Tidak ada data presensi untuk lokasi terpilih pada tanggal ini.</td></tr>';
+        list.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 2rem;">Tidak ada data presensi untuk lokasi terpilih pada tanggal ini.</td></tr>';
         return;
     }
 
@@ -572,15 +532,25 @@ function renderDashboardTable() {
         const waktu = r.waktu || r.Waktu || r.Jam || extractTime(r.timestamp) || '-';
         const status = r.status || r['status kehadiran'] || 'Hadir';
         
+        // Photo rendering logic
+        const photoData = r['kode foto'] || r.foto;
+        const photoHtml = photoData ? 
+            `<img src="data:image/jpeg;base64,${photoData}" class="img-thumbnail" onclick="openPhoto('data:image/jpeg;base64,${photoData}', '${nama}')" style="cursor:pointer; width:40px; height:40px; object-fit:cover; border-radius:50%; border: 2px solid var(--border-color);">` : 
+            `<div style="width:40px; height:40px; border-radius:50%; background:#e2e8f0; display:flex; align-items:center; justify-content:center; color:#94a3b8; margin:auto;"><i class="fas fa-user"></i></div>`;
+
         // Find DUDI for display from master
         const studentMaster = state.masterData.find(m => (m.nama || '').toString().trim().toLowerCase() === nama.toLowerCase().trim());
         const dudi = studentMaster ? studentMaster.dudi : '-';
+        
+        const keterangan = r.keterangan || r.alasan || '-';
 
         tr.innerHTML = `
+            <td style="text-align:center">${photoHtml}</td>
             <td><strong>${nama}</strong></td>
             <td>${waktu}</td>
-            <td>${dudi}</td>
+            <td><span style="font-size: 0.85rem; color: var(--text-muted)">${dudi}</span></td>
             <td><span class="status-badge ${status.toLowerCase().includes('hadir') ? 'online' : 'warning'}">${status}</span></td>
+            <td><div style="max-width:150px; font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap" title="${keterangan}">${keterangan}</div></td>
         `;
         list.appendChild(tr);
     });
@@ -658,94 +628,6 @@ function renderMasterTable() {
     });
 }
 
-function renderRekapTable(attendanceList) {
-    const list = document.getElementById('rekap-list');
-    if (!list) return;
-    list.innerHTML = '';
-    
-    // Only show DUDIs that have been "SET" (selected in state)
-    if (state.selectedDudis.length === 0) {
-        list.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 3rem;">Silakan pilih dan "Set" lokasi DUDI di Dashboard terlebih dahulu untuk melihat rekap ini.</td></tr>';
-        return;
-    }
-
-    // Group master data by DUDI (Only for selected ones)
-    const dudiGroups = {};
-    state.masterData.forEach(s => {
-        const dudiName = s.dudi || s.DUDI || 'Lainnya';
-        // FILTER: Only include if in selectedDudis
-        if (!state.selectedDudis.includes(dudiName)) return;
-
-        if (!dudiGroups[dudiName]) dudiGroups[dudiName] = [];
-        dudiGroups[dudiName].push({
-            nama: s.nama,
-            hadir: 0,
-            izin: 0,
-            sakit: 0,
-            alfa: 0
-        });
-    });
-
-    // Count attendance from the list
-    attendanceList.forEach(r => {
-        const studentName = (r.nama || r.Nama || '').trim().toLowerCase();
-        const status = (r.status || r['status kehadiran'] || '').toLowerCase();
-        
-        // Find student in groups
-        for (const dudi in dudiGroups) {
-            const student = dudiGroups[dudi].find(s => s.nama.toLowerCase().trim() === studentName);
-            if (student) {
-                if (status.includes('hadir')) student.hadir++;
-                else if (status.includes('izin')) student.izin++;
-                else if (status.includes('sakit')) student.sakit++;
-                break;
-            }
-        }
-    });
-
-    // Render grouped table
-    const sortedDudis = Object.keys(dudiGroups).sort();
-    
-    if (sortedDudis.length === 0) {
-        list.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2rem;">Tidak ada data siswa untuk lokasi terpilih.</td></tr>';
-        return;
-    }
-
-    sortedDudis.forEach(dudi => {
-        // Add DUDI Header row
-        const headerTr = document.createElement('tr');
-        headerTr.style.background = '#f8fafc';
-        headerTr.innerHTML = `
-            <td colspan="7" style="font-weight:700; color:var(--primary-color); border-left: 4px solid var(--primary-color); padding: 12px;">
-                <i class="fas fa-building"></i> ${dudi}
-            </td>
-        `;
-        list.appendChild(headerTr);
-
-        // Sort students by name
-        const students = dudiGroups[dudi].sort((a,b) => a.nama.localeCompare(b.nama));
-
-        students.forEach(s => {
-            const totalActivity = s.hadir + s.izin + s.sakit;
-            // Simple logic: If we have no record of attendance for a work day, it's Alfa.
-            // But since we don't have total work days, we show count.
-            const percent = totalActivity > 0 ? Math.round((s.hadir / totalActivity) * 100) : 0;
-            
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td style="padding-left: 2.5rem; font-size: 0.9rem;">${s.nama}</td>
-                <td style="text-align:center">${s.hadir}</td>
-                <td style="text-align:center">${s.izin}</td>
-                <td style="text-align:center">${s.sakit}</td>
-                <td style="text-align:center; color: var(--danger);">${s.alfa}</td>
-                <td style="text-align:center; font-weight: 500;">${totalActivity}</td>
-                <td style="text-align:center; font-weight:700; color: var(--primary-color)">${percent}%</td>
-            `;
-            list.appendChild(tr);
-        });
-    });
-}
-
 // Helpers
 function showLoading(show) {
     state.loading = show;
@@ -810,7 +692,6 @@ function setupDatePickers() {
     
     document.getElementById('dashboard-date-filter').value = today;
     document.getElementById('harian-date-picker').value = today;
-    document.getElementById('rekap-month-picker').value = currentMonth;
     document.getElementById('current-date-display').textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     
     // Add listener for harian date picker
@@ -934,40 +815,4 @@ function shareAbsentToWA() {
     window.open(waUrl, '_blank');
 }
 
-function exportRekapToPDF() {
-    const element = document.getElementById('rekap-table');
-    const month = document.getElementById('rekap-month-picker').value;
-    
-    if (!month) {
-        alert('Pilih bulan terlebih dahulu.');
-        return;
-    }
 
-    const options = {
-        margin: 10,
-        filename: `Rekap_Presensi_PKL_${month}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-    };
-
-    // Add title before export
-    const container = document.createElement('div');
-    container.innerHTML = `
-        <div style="text-align: center; margin-bottom: 20px; font-family: 'Inter', sans-serif;">
-            <h2 style="margin: 0;">LAPORAN REKAPITULASI PRESENSI SISWA PKL</h2>
-            <h3 style="margin: 5px 0;">Bulan: ${month}</h3>
-            <hr style="border: 1px solid #000; margin: 10px 0;">
-        </div>
-    `;
-    
-    // Clone table to avoid affecting live view
-    const tableClone = element.cloneNode(true);
-    // Remove inline styles that might mess up PDF layout
-    tableClone.style.width = '100%';
-    tableClone.style.fontSize = '10px';
-    
-    container.appendChild(tableClone);
-
-    html2pdf().set(options).from(container).save();
-}

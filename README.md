@@ -5,7 +5,6 @@ Aspirasi untuk mempermudah Bapak/Ibu Guru dalam memantau kehadiran siswa PKL mel
 ## Fitur Utama
 - **Dashboard Ringkasan**: Statistik kehadiran harian secara real-time.
 - **Presensi Harian**: Detail kehadiran per tanggal dengan foto bukti (jika tersedia).
-- **Rekap Bulanan**: Laporan ringkasan kehadiran siswa dalam rentang satu bulan.
 - **Data Master**: Melihat daftar seluruh siswa dan penempatan DUDI.
 - **Live Search**: Mencari data secara instan di setiap tabel.
 

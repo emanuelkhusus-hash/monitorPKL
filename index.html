@@ -40,7 +40,7 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="logo.png" alt="Logo PKL Kenshiro" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid #6366f1; margin-bottom: 15px; background: white;">
+                <img src="logo.png" alt="Logo PKL Kenshiro" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--primary-color); margin-bottom: 15px; background: white;">
                 <h2>PKL KENSHIRO</h2>
                 <p>Monitoring System 2026</p>
             </div>
@@ -50,9 +50,6 @@
                 </a>
                 <a href="#" class="nav-item" data-view="harian">
                     <i class="fas fa-calendar-day"></i> Presensi Harian
-                </a>
-                <a href="#" class="nav-item" data-view="rekap">
-                    <i class="fas fa-calendar-alt"></i> Rekap Bulanan
                 </a>
                 <a href="#" class="nav-item" data-view="datasiswa">
                     <i class="fas fa-users"></i> Data Siswa
@@ -147,7 +144,7 @@
                         <div class="stat-card hadir">
                             <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
                             <div class="stat-info">
-                                <span class="label">Hadir Hari Ini</span>
+                                <span class="label">Total Hadir</span>
                                 <h2 id="stat-hadir">0</h2>
                             </div>
                         </div>
@@ -177,14 +174,16 @@
                             <table>
                                 <thead>
                                     <tr>
+                                        <th style="width: 60px; text-align: center;">Foto</th>
                                         <th>Siswa</th>
                                         <th>Waktu</th>
                                         <th>DUDI</th>
                                         <th>Status</th>
+                                        <th>Keterangan</th>
                                     </tr>
                                 </thead>
                                 <tbody id="dashboard-attendance-list">
-                                    <tr><td colspan="4" style="text-align:center; padding: 2rem; color: var(--text-muted)">Silakan pilih lokasi DUDI untuk melihat data presensi.</td></tr>
+                                    <tr><td colspan="6" style="text-align:center; padding: 2rem; color: var(--text-muted)">Silakan pilih lokasi DUDI untuk melihat data presensi.</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -248,46 +247,6 @@
                                     </tr>
                                 </thead>
                                 <tbody id="harian-list">
-                                    <!-- Data will be injected here -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Rekap View -->
-                <section id="rekap-view" class="view hidden">
-                    <div class="header-section">
-                        <div class="header-with-actions">
-                            <div>
-                                <h1>Rekap Bulanan</h1>
-                                <p>Ringkasan kehadiran siswa dalam satu bulan.</p>
-                            </div>
-                             <div class="filter-actions">
-                                <input type="month" id="rekap-month-picker">
-                                <button class="btn-primary" id="btn-fetch-rekap">Tampilkan</button>
-                                <button class="btn-refresh" id="btn-export-pdf" style="background: #dc2626; color: white;">
-                                    <i class="fas fa-file-pdf"></i> Export PDF
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="content-card">
-                        <div class="table-responsive">
-                            <table id="rekap-table">
-                                <thead>
-                                    <tr style="background: #f8fafc;">
-                                        <th>DUDI / NAMA SISWA</th>
-                                        <th style="text-align:center">HADIR</th>
-                                        <th style="text-align:center">IZIN</th>
-                                        <th style="text-align:center">SAKIT</th>
-                                        <th style="text-align:center">ALFA</th>
-                                        <th style="text-align:center">TOTAL</th>
-                                        <th style="text-align:center">%</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="rekap-list">
                                     <!-- Data will be injected here -->
                                 </tbody>
                             </table>
