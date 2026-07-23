@@ -3,7 +3,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbwMMlDtThv9Uo06NIbaxwi5
 // --- PENGATURAN LOGIN ---
 const AUTH_CONFIG = {
     username: 'admin',
-    password: 'kenshiro2026'
+    password: '2026'
 };
 
 // State Management
